@@ -8,8 +8,6 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: ./terraform
-    environment: dev
 
     steps:
       - name: Checkout

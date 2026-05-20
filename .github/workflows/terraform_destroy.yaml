@@ -3,13 +3,11 @@ name: Destroy Infrastructure
 on: workflow_dispatch
 
 jobs:
-  Destroy:
+  destroy:
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
-        working-directory: ./terraform
-    environment: dev
 
     steps:
       - name: Checkout
