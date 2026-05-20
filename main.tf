@@ -185,6 +185,7 @@ resource "aws_ecs_service" "flask_service" {
   name                = "sk-flask-service"
   cluster             = aws_ecs_cluster.flask_xray_cluster.id
   task_definition     = aws_ecs_task_definition.flask_xray_taskdef.arn
+  launch_type         = "FARGATE"
   desired_count       = 1
   scheduling_strategy = "REPLICA"
 
