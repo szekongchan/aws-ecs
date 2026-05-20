@@ -23,14 +23,15 @@ resource "aws_security_group" "main" {
   }
 }
 
-resource "aws_security_group_ingress_rule" "allow_http" {
+resource "aws_vpc_security_group_ingress_rule" "allow_http" {
   security_group_id = aws_security_group.main.id
   from_port         = 8080
   to_port           = 8080
-  protocol          = "tcp"
+  ip_protocol       = "tcp"
+  cidr_ipv4         = "0.0.0.0/0"
 }
 
-resource "aws_igw" "main" {
+resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
@@ -43,7 +44,7 @@ resource "aws_route_table" "main" {
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_igw.main.id
+    gateway_id = aws_internet_gateway.main.id
   }
 
   route {
