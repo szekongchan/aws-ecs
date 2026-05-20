@@ -84,6 +84,9 @@ resource "aws_cloudwatch_log_group" "ecs_log_group" {
 resource "aws_ecs_task_definition" "flask_xray_taskdef" {
   family                   = "sk-flask-xray-taskdef"
   requires_compatibilities = ["FARGATE"]
+  network_mode             = "awsvpc"
+  cpu                      = "512"
+  memory                   = "1024"
 
   task_role_arn      = aws_iam_role.ecs_xray_task_role.arn
   execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
@@ -94,6 +97,7 @@ resource "aws_ecs_task_definition" "flask_xray_taskdef" {
       name      = "flask-app"
       image     = data.aws_ssm_parameter.flask_image_uri.value
       essential = true
+      memoryReservation = 512
       portMappings = [
         {
           containerPort = 8080
@@ -131,6 +135,7 @@ resource "aws_ecs_task_definition" "flask_xray_taskdef" {
       name      = "xray-sidecar"
       image     = "amazon/aws-xray-daemon"
       essential = false
+      memoryReservation = 256
       portMappings = [
         {
           containerPort = 2000
