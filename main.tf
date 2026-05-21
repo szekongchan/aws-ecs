@@ -1,8 +1,8 @@
 locals {
   image_uri_parameter_name = "/sk/ecs/flask-image-uri"
-  ssm_parameter_arn   = "arn:aws:ssm:ap-southeast-1:255945442255:parameter/sk/config"  
-  secrets_manager_arn = "arn:aws:secretsmanager:ap-southeast-1:255945442255:secret:sk/db_password-koLWUY" 
-  aws_region          = "ap-southeast-1"                                                     
+  ssm_parameter_arn        = "arn:aws:ssm:ap-southeast-1:255945442255:parameter/sk/config"
+  secrets_manager_arn      = "arn:aws:secretsmanager:ap-southeast-1:255945442255:secret:sk/db_password-koLWUY"
+  aws_region               = "ap-southeast-1"
 }
 
 data "aws_ssm_parameter" "flask_image_uri" {
@@ -66,6 +66,11 @@ resource "aws_iam_role_policy_attachment" "ecs_execution_attachments" {
 resource "aws_ecs_cluster" "flask_xray_cluster" {
   name = "sk-flask-xray-cluster"
 
+  setting {
+    name  = "containerInsights"
+    value = "enabled"
+  }
+
   tags = {
     Name = "sk-flask-xray-cluster"
   }
@@ -94,9 +99,9 @@ resource "aws_ecs_task_definition" "flask_xray_taskdef" {
   container_definitions = jsonencode([
     {
       # --- Container 1: flask-app ---
-      name      = "flask-app"
-      image     = data.aws_ssm_parameter.flask_image_uri.value
-      essential = true
+      name              = "flask-app"
+      image             = data.aws_ssm_parameter.flask_image_uri.value
+      essential         = true
       memoryReservation = 512
       portMappings = [
         {
@@ -132,9 +137,9 @@ resource "aws_ecs_task_definition" "flask_xray_taskdef" {
     },
     {
       # --- Container 2: xray-sidecar ---
-      name      = "xray-sidecar"
-      image     = "amazon/aws-xray-daemon"
-      essential = false
+      name              = "xray-sidecar"
+      image             = "amazon/aws-xray-daemon"
+      essential         = false
       memoryReservation = 256
       portMappings = [
         {
