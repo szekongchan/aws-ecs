@@ -1,4 +1,4 @@
-name: Push Image to ECR
+name: Push Module 3.5 Image to ECR
 
 on: workflow_dispatch
 

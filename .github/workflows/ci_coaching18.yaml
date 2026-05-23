@@ -1,4 +1,4 @@
-name: Push Image to ECR
+name: Push Coaching 18 Image to ECR
 
 on: workflow_dispatch
 
