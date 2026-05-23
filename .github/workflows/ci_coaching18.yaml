@@ -3,8 +3,50 @@ name: Push Coaching 18 Image to ECR
 on: workflow_dispatch
 
 jobs:
-  deploy:
-    name: Deploy
+  push-service-s3-image:
+    name: Push Service S3 Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and Push Image to Amazon ECR
+        id: build-service_s3-image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./src/service_s3
+          push: true
+          tags: |
+            ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_S3_REPOSITORY }}:${{ github.sha }}
+            ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_S3_REPOSITORY }}:latest
+          platforms: linux/amd64
+
+      - name: Persist Image URI for Terraform
+        run: |
+          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_S3_REPOSITORY }}:${{ github.sha }}"
+          aws ssm put-parameter \
+            --name "${{ vars.S3_IMAGE_URI }}" \
+            --type String \
+            --value "$IMAGE_URI" \
+            --overwrite
+          echo "Published image URI: $IMAGE_URI"
+
+  push-service-sqs-image:
+    name: Push Service SQS Image
     runs-on: ubuntu-latest
 
     steps:
@@ -25,18 +67,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Build and Push service_s3 image to Amazon ECR
-        id: build-service_s3-image
-        uses: docker/build-push-action@v7
-        with:
-          context: ./src/service_s3
-          push: true
-          tags: |
-            ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_S3_REPOSITORY }}:${{ github.sha }}
-            ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_S3_REPOSITORY }}:latest
-          platforms: linux/amd64
-
-      - name: Build and Push service_sqs image to Amazon ECR
+      - name: Build and Push Image to Amazon ECR
         id: build-service_sqs-image
         uses: docker/build-push-action@v7
         with:
@@ -47,17 +78,7 @@ jobs:
             ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_SQS_REPOSITORY }}:latest
           platforms: linux/amd64
 
-      - name: Persist service_s3 image URI for Terraform
-        run: |
-          IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_S3_REPOSITORY }}:${{ github.sha }}"
-          aws ssm put-parameter \
-            --name "${{ vars.S3_IMAGE_URI }}" \
-            --type String \
-            --value "$IMAGE_URI" \
-            --overwrite
-          echo "Published image URI: $IMAGE_URI"
-
-      - name: Persist service_sqs image URI for Terraform
+      - name: Persist Image URI for Terraform
         run: |
           IMAGE_URI="${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_SQS_REPOSITORY }}:${{ github.sha }}"
           aws ssm put-parameter \
