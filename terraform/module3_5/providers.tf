@@ -10,7 +10,7 @@ terraform {
 
   backend "s3" {
     bucket = "sctp-ce12-tfstate-bucket"
-    key    = "sk-ecs.tfstate"
+    key    = "sk-module3_5.tfstate"
     region = "ap-southeast-1"
   }
 }
